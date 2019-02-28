@@ -10,7 +10,38 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from sys import exit
-from src import Cherwell, Device42, ManageEngine
+from src.service import Service
+from src.manage_engine import ManageEngin
+
+
+class Device42(Service):
+    def request(self, path, method, data=(), doql=None):
+        headers = {
+            'Authorization': 'Basic ' + base64.b64encode((self.user + ':' + self.password).encode()).decode(),
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        result = None
+
+        if method == 'GET':
+            response = requests.get(self.url + path, headers=headers, verify=False)
+            validate_response(response)
+            result = deserialize_json(response.content.decode())
+        if method == 'POST' and doql is not None:
+            payload = {
+                "query": doql,
+                "header": "yes"
+            }
+            response = requests.post(
+                self.url + path,
+                headers=headers,
+                verify=False,
+                data=payload
+            )
+            validate_response(response)
+            result = response.text
+
+        return result
 
 
 def deserialize_json(s):
@@ -45,7 +76,7 @@ def validate_response(response):
 
 def init_services(settings):
     return {
-        'cherwell': Cherwell(settings.find('cherwell')),
+        'manage_engine': ManageEngin(settings.find('manage_engine')),
         'device42': Device42(settings.find('device42'))
     }
 
@@ -56,12 +87,12 @@ def task_execute(task, services):
     _resource = task.find('api/resource')
     _target = task.find('api/target')
 
-    if _resource.attrib['target'] == 'cherwell':
-        resource_api = services['cherwell']
+    if _resource.attrib['target'] == 'manage_engine':
+        resource_api = services['manage_engine']
         target_api = services['device42']
     else:
         resource_api = services['device42']
-        target_api = services['cherwell']
+        target_api = services['manage_engine']
 
     method = _resource.attrib['method']
     doql = _resource.attrib.get('doql')
@@ -121,18 +152,18 @@ def task_execute(task, services):
     # source = resource_api.request(source_url, _resource.attrib['method'])
     # lib.from_d42(source, mapping, _target, _resource, target_api, resource_api, configuration_item)
 
-if __name__ == "__main__":
-    print('Running...')
 
-    # Load mapping
-    config = eTree.parse('mapping.xml')
-    meta = config.getroot()
+print('Running...')
 
-    # Init transports services
-    services = init_services(meta.find('settings'))
+# Load mapping
+config = eTree.parse('mapping.xml')
+meta = config.getroot()
 
-    # Parse tasks
-    tasks = meta.find('tasks')
-    for task in tasks:
-        if task.attrib['enable'] == 'true':
-            task_execute(task, services)
+# Init transports services
+services = init_services(meta.find('settings'))
+
+# Parse tasks
+tasks = meta.find('tasks')
+for task in tasks:
+    if task.attrib['enable'] == 'true':
+        task_execute(task, services)

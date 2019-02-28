@@ -2,3 +2,4 @@
 .idea
 mapping.xml
 __pycache__
+.vscode/*
