@@ -1,3 +1,5 @@
+import requests
+import urllib.parse as urllib
 from src.service import Service
 
 class Cherwell(Service):
@@ -17,8 +19,8 @@ class Cherwell(Service):
         url = "%s/token" % (self.url,)
 
         response = requests.request("POST", url, data=payload, headers=headers)
-        validate_response(response)
-        response_data = deserialize_json(response.content.decode('utf-8'))
+        self.validate_response(response)
+        response_data = self.deserialize_json(response.content.decode('utf-8'))
         self.access_token = response_data['access_token']
         self.refresh_token = response_data['refresh_token']
 
@@ -36,8 +38,8 @@ class Cherwell(Service):
         url = "%s/token" % (self.url,)
 
         response = requests.request("POST", url, data=payload, headers=headers)
-        validate_response(response)
-        response_data = deserialize_json(response.content.decode('utf-8'))
+        self.validate_response(response)
+        response_data = self.deserialize_json(response.content.decode('utf-8'))
         self.access_token = response_data['access_token']
         self.refresh_token = response_data['refresh_token']
 
@@ -74,11 +76,11 @@ class Cherwell(Service):
             response = perform_request(path, method, data)
 
         if not silent:
-            validate_response(response)
+            self.validate_response(response)
 
         if return_serialized:
             if len(response.content):
-                result = deserialize_json(response.content.decode())
+                result = self.deserialize_json(response.content.decode())
         else:
             result = response
 

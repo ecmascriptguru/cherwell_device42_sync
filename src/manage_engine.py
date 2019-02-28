@@ -1,7 +1,7 @@
 import json, base64, requests
 import xml.etree.ElementTree as eTree
 import urllib.parse as urllib
-from sync import Service
+from .service import Service
 
 class ManageEngine(object):
     class OPERATION_NAME:
@@ -56,7 +56,7 @@ class ManageEngine(object):
 
         if return_serialized:
             if len(response.content):
-                result = deserialize_json(response.content.decode())
+                result = self.deserialize_json(response.content.decode())
         else:
             result = response
 

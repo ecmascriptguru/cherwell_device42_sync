@@ -1,4 +1,6 @@
 import base64
+import requests
+from .service import Service
 
 
 class Device42(Service):
@@ -12,8 +14,8 @@ class Device42(Service):
 
         if method == 'GET':
             response = requests.get(self.url + path, headers=headers, verify=False)
-            validate_response(response)
-            result = deserialize_json(response.content.decode())
+            self.validate_response(response)
+            result = self.deserialize_json(response.content.decode())
         if method == 'POST' and doql is not None:
             payload = {
                 "query": doql,

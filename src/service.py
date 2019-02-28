@@ -23,3 +23,15 @@ class Service:
                 print('Response:', response.__getstate__())
                 traceback.print_stack()
             exit(1)
+
+    def deserialize_json(self, s):
+        try:
+            return json.loads(s)
+        except Exception as err:
+            if DEBUG:
+                print('Error upon deserialization JSON:', str(err))
+                print('Source:', str(s))
+                traceback.print_stack()
+            else:
+                print('Error upon deserialization JSON')
+            raise err

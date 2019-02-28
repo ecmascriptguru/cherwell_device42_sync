@@ -10,73 +10,12 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from sys import exit
-from src.service import Service
-from src.manage_engine import ManageEngin
-
-
-class Device42(Service):
-    def request(self, path, method, data=(), doql=None):
-        headers = {
-            'Authorization': 'Basic ' + base64.b64encode((self.user + ':' + self.password).encode()).decode(),
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-
-        result = None
-
-        if method == 'GET':
-            response = requests.get(self.url + path, headers=headers, verify=False)
-            validate_response(response)
-            result = deserialize_json(response.content.decode())
-        if method == 'POST' and doql is not None:
-            payload = {
-                "query": doql,
-                "header": "yes"
-            }
-            response = requests.post(
-                self.url + path,
-                headers=headers,
-                verify=False,
-                data=payload
-            )
-            validate_response(response)
-            result = response.text
-
-        return result
-
-
-def deserialize_json(s):
-    try:
-        return json.loads(s)
-    except Exception as err:
-        if DEBUG:
-            print('Error upon deserialization JSON:', str(err))
-            print('Source:', str(s))
-            traceback.print_stack()
-        else:
-            print('Error upon deserialization JSON')
-        raise err
-
-
-def validate_response(response):
-    try:
-        response.raise_for_status()
-    except Exception as err:
-        print(err)
-        if DEBUG:
-            # show states of request and response
-            request_state = dict(
-                (attr, getattr(response.request, attr, None))
-                for attr in ['url', 'method', 'headers', 'body']
-            )
-            print('Request:', request_state)
-            print('Response:', response.__getstate__())
-            traceback.print_stack()
-        exit(1)
+from src import ManageEngine, Device42
 
 
 def init_services(settings):
     return {
-        'manage_engine': ManageEngin(settings.find('manage_engine')),
+        'manage_engine': ManageEngine(settings.find('manage_engine')),
         'device42': Device42(settings.find('device42'))
     }
 
